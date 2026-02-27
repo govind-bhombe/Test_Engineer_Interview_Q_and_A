@@ -1,7 +1,3 @@
-Here’s a **formal and professional version** of your README.md for the GitLab repository:
-
----
-
 # Software Testing Q&A Repository
 
 ## Overview
