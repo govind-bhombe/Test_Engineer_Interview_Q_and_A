@@ -2,6 +2,39 @@
 1. Difference between Page Object Model (POM) and Page Factory? How Page factory implementing lazy initialization and how we can do same in POM?
 2. What is Page Object Model (POM), and why is it used?
 3. Explain Page Object Model and its benefits.
+Ans:
+ Page Object Model is a design pattern that represents each web page as a Java class. 
+  Structure: 
+  public class LoginPage { 
+      private WebDriver driver;  
+      // Locators 
+      private By usernameField = By.id("username"); 
+      private By passwordField = By.id("password"); 
+      private By loginButton = By.id("loginBtn"); 
+       
+      // Constructor 
+      public LoginPage(WebDriver driver) { 
+          this.driver = driver; 
+      } 
+       
+      // Page actions 
+      public void enterUsername(String username) { 
+          driver.findElement(usernameField).sendKeys(username); 
+      } 
+       
+      public void enterPassword(String password) { 
+          driver.findElement(passwordField).sendKeys(password); 
+      } 
+       
+      public DashboardPage clickLogin() { 
+          driver.findElement(loginButton).click(); 
+          return new DashboardPage(driver); 
+      } 
+  } 
+  Advantages: - Improved maintainability (locators centralized in one place) - Reduced code 
+  duplication - Easy to update locators without touching test logic - Better readability and 
+  reusability - Separation of concerns (test logic vs. UI interactions)
+
 4. Explain how you implemented the Page Object Model in your framework.
 5. 
 
@@ -17,20 +50,143 @@
 
 ✅ Synchronization
 1. Difference between implicit, explicit, and fluent waits.
-2.Difference between implicit and explicit waits.
-3.How do you handle synchronization issues in Selenium? Explain different wait strategies.
+    Ans:
+    a. Implicit- Page load & all elements should load within time  
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10)); | | Wait for 
+    b. Explicit- specific element visibility before action 
+        new WebDriverWait(driver, Duration.ofSeconds(10)).until(ExpectedConditions.visibilityOfElementLocated(By.id("btn")));
+    c. Fluent- Complex condition with custom polling & exceptions 
+        new FluentWait<>(driver).withTimeout(Duration.ofSeconds(10)).pollingEvery(Duration.ofMillis(500)).ignoring(NoSuchElementException.class).until(...); | 
+  Best Practice: Avoid implicit waits; use explicit waits for better control and faster test execution.
+
+2. How do you handle synchronization issues in Selenium? Explain different wait strategies.
+Ans: Selenium provides three types of waits to handle synchronization issues: 
+  • Implicit Wait: Sets a default waiting time for all elements throughout the session. 
+  driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10)); 
+  • Explicit Wait: Waits for specific conditions on particular elements before 
+  performing actions. 
+  WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10)); 
+  wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("submitB
+  tn"))); 
+  • Fluent Wait: Provides more control with custom polling frequency and exception 
+  handling. 
+  Wait<WebDriver> wait = new FluentWait<>(driver) 
+  .withTimeout(Duration.ofSeconds(10)) 
+  .pollingEvery(Duration.ofMillis(500)) 
+  .ignoring(NoSuchElementException.class); 
+  wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("element")));
+
+
 
 ✅ Selenium.
-12. How is findElement() different from findElements()?
-13. How do you handle multiple browser windows using WebDriver?
-14. 
-15. How do you deal with dynamic elements in Selenium?
-16. What are the different types of waits in Selenium? Which one is preferred?
+1. How is findElement() different from findElements()?
+Ans: • findElement(): Returns a single WebElement, throws NoSuchElementException if element not found  
+  Syntax: WebElement element = driver.findElement(By.id("username")); 
+• findElements(): Returns a List of WebElements; returns empty list if no elements 
+  are found (no exception thrown). 
+  Syntax: List<WebElement> elements = driver.findElements(By.className("item")); 
+  Note- Use findElement() when you expect exactly one element, use findElements() when 
+  checking if elements exist or iterating through multiple elements. 
+
+2. What are XPath and CSS Selector? When would you use each? 
+  Ans:Both are locator strategies in Selenium: 
+  • XPath: A query language for navigating XML/HTML documents. More powerful and 
+  flexible. 
+  By.xpath("//button[@id='submit' and @class='primary']") 
+  By.xpath("//input[@placeholder='Enter username']") 
+  By.xpath("//div[contains(@class, 'error-message')]") 
+  • CSS Selector: Uses CSS styling rules. Generally faster than XPath. 
+  By.cssSelector("button#submit.primary") 
+  By.cssSelector("input[placeholder='Enter username']") 
+  By.cssSelector("div.error-message") 
+  When to use: Use CSS Selector for simple, stable locators (faster performance). Use XPath 
+  for complex scenarios like traversing parent elements or multiple conditions.
+
+3.  Explain different locator strategies and their reliability order. 
+  Ans: Locator strategies ranked by reliability: 
+  1. ID (Most reliable) - Unique, direct, and unchanged 
+    By.id("userId") 
+  2. Name - Usually stable and unique 
+    By.name("username") 
+  3.CSS Selector - Fast, stable, and maintainable 
+    By.cssSelector("input.form-control[name='email']") 
+  4. XPath - Flexible but can be fragile with DOM changes 
+    By.xpath("//input[@type='email']") 
+  5. Link Text / Partial Link Text - Good for links but limited 
+    By.linkText("Click Here") 
+    By.partialLinkText("Click") 
+  6. Class Name - Can be fragile if styling changes 
+    By.className("button-primary") 
+  7. Tag Name (Least reliable) - Not unique, too generic 
+    By.tagName("button") 
+  Best Practice: Use ID or CSS selectors; avoid overly complex XPath or tag names.
+
+4. How do you deal with dynamic elements in Selenium?
+Ans: Strategies to handle dynamic elements: 
+  a. Use Partial Attribute Matching: 
+    By.xpath("//button[starts-with(@id, 'btn_')]") 
+    By.cssSelector("button[id*='dynamic']") 
+  b.Use Relative XPath Based on Text Content: 
+    By.xpath("//button[contains(text(), 'Submit')]") 
+    By.xpath("//label[text()='Username']/following::input") 
+  c.Use WebDriverWait with Custom Expected Condition: 
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10)); 
+    wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//butt
+    on[contains(@class, 'dynamic')]"))); 
+  d.Use Explicit Waits Before Interaction: 
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10)); 
+    WebElement element = 
+    wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[@
+    onclick*='submit']"))); 
+    element.click(); 
+
+5.  What are the differences between driver.navigate(), driver.get(), and driver.switchTo()? 
+  Ans:- driver.get(): Loads a URL and waits for page load. Blocking operation. java   
+  driver.get("https://example.com"); 
+  • driver.navigate().to(): Similar to get() but allows navigation history. 
+  driver.navigate().to("https://example.com"); 
+  driver.navigate().back();    
+  // Go to previous page 
+  driver.navigate().forward(); // Go to next page 
+  driver.navigate().refresh(); // Refresh current page 
+  • driver.switchTo(): Switches context between frames, windows, alerts, etc. 
+  driver.switchTo().frame("iframeId"); 
+  driver.switchTo().parentFrame(); 
+  driver.switchTo().defaultContent(); 
+  driver.switchTo().alert().accept(); 
+  driver.switchTo().window(windowHandle); 
+
+6.  What is the difference between switchTo() methods and how do you switch between frames and windows? 
+ Ans: // Switch to frame by index 
+  driver.switchTo().frame(0); 
+  // Switch to frame by name/ID 
+  driver.switchTo().frame("frameName"); 
+  // Switch to frame by WebElement 
+  WebElement frameElement = driver.findElement(By.id("frame")); 
+  driver.switchTo().frame(frameElement); 
+  // Switch back to parent frame 
+  driver.switchTo().parentFrame(); 
+  // Switch to main page (out of all frames) 
+  driver.switchTo().defaultContent(); 
+  // Switch to window 
+  String mainWindow = driver.getWindowHandle(); 
+  Set<String> handles = driver.getWindowHandles(); 
+  for (String handle : handles) { 
+  driver.switchTo().window(handle); 
+  if (driver.getTitle().equals("Expected Title")) { 
+  break; 
+  } 
+  } 
+  // Switch back to main window 
+  driver.switchTo().window(mainWindow);
+
+. How do you handle multiple browser windows using WebDriver?
+Ans: 
+
 17. How do you handle alerts and popups in Selenium?
 18. Can you automate CAPTCHA or OTP handling? Why or why not?
 19. How do you run Selenium tests in headless mode?
-3️⃣ How do you handle dynamic elements using XPath?
-4️⃣
+
 5️⃣ How do you capture screenshots for failed cases?
 6️⃣ 
 7️⃣ Scenario: Login button becomes enabled only after API call – how to handle?
@@ -39,8 +195,65 @@
 1. 
 2. Asked to share screen and write XPath for a given element.
 3. Use of Actions class and Select class.
+Q.  How do you perform keyboard and mouse interactions using Selenium? 
+  // Keyboard interactions 
+  Actions actions = new Actions(driver); 
+  actions.sendKeys(Keys.ENTER).perform(); 
+  actions.sendKeys(Keys.TAB).perform(); 
+  actions.sendKeys(Keys.ESCAPE).perform(); 
+  actions.keyDown(Keys.CONTROL).sendKeys("A").keyUp(Keys.CONTROL).perform(); // 
+  Ctrl+A 
+  // Mouse interactions 
+  actions.click(element).perform(); 
+  actions.doubleClick(element).perform(); 
+  actions.rightClick(element).perform(); 
+  actions.moveToElement(element).perform(); 
+  actions.dragAndDrop(source, target).perform(); 
+  // Key combinations 
+  actions.keyDown(Keys.SHIFT).click(element1).click(element2).keyUp(Keys.SHIFT)
+  .perform(); // Multi-select
+
+Q.  What is the difference between Actions class and direct element methods? 
+   Ans: - Direct Methods: Perform actions directly on an element. java   element.click();   
+  element.sendKeys("text");   element.submit(); 
+  • Actions Class: Simulates complex user interactions using mouse and keyboard. 
+    Actions actions = new Actions(driver); 
+  actions.moveToElement(element).click().build().perform(); 
+  actions.doubleClick(element).perform(); 
+  actions.rightClick(element).perform(); 
+  actions.dragAndDrop(source, target).perform(); 
+  actions.keyDown(Keys.SHIFT).click(element).keyUp(Keys.SHIFT).perform(); 
+  Use Actions class for: hovering over elements, drag-and-drop, right-click, key 
+  combinations, or simulating complex user gestures. 
 4. Explain your roles and responsibilities.
 5. Exceptions faced while working with Selenium (Give 5 examples).
+Q. How do you handle StaleElementReferenceException?
+Ans:  StaleElementReferenceException occurs when a WebElement reference becomes stale 
+  (DOM has been refreshed). 
+  Solutions: 
+  1. Re-locate the element after action: 
+    WebElement element = driver.findElement(By.id("dynamicElement")); 
+  element.click(); 
+  // DOM refreshes 
+  element = driver.findElement(By.id("dynamicElement")); // Re-locate 
+  element.sendKeys("text"); 
+  2. Use Explicit Wait with WebDriverWait: 
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10)); 
+  WebElement element = 
+  wait.until(ExpectedConditions.presenceOfElementLocated(By.id("element")
+  )); 
+  element.click(); 
+  3. Wrap in Try-Catch and Retry: 
+    int attempts = 0; 
+  while (attempts < 3) { 
+      try { 
+          driver.findElement(By.id("element")).click(); 
+          break; 
+      } catch (StaleElementReferenceException e) { 
+          attempts++; 
+      } 
+  } 
+
 5. 
 6. 
 7. Write a Selenium Java code to handle a dynamic dropdown or autocomplete list.
@@ -71,7 +284,7 @@
 10. @BeforeTest and @BeforeClass difference?
 11. How to write Data Provider in TestNG?
 12. Groups in TestNG?
-13. Different waits in Selenium and their usage?
+
 14. OOPS concept in java and usage in Selenium?
 1. Selenium Framework explanation
 2. How to handle dynamic dropdowns in selenium?
@@ -85,6 +298,24 @@
 12. How to run failed tests again in TestNG?
 
 ✅ Scenario-Based / Practical Questions
+1.  Explain how to handle SSL certificate errors in Selenium. 
+  // For Chrome 
+  ChromeOptions options = new ChromeOptions(); 
+  options.setAcceptInsecureCerts(true); 
+  WebDriver driver = new ChromeDriver(options); 
+  // For Firefox 
+  FirefoxOptions options = new FirefoxOptions(); 
+  options.setAcceptInsecureCerts(true); 
+  WebDriver driver = new FirefoxDriver(options); 
+  // For Edge 
+  EdgeOptions options = new EdgeOptions(); 
+  options.setAcceptInsecureCerts(true); 
+  WebDriver driver = new EdgeDriver(options); 
+  // For Internet Explorer 
+  DesiredCapabilities caps = new DesiredCapabilities(); 
+  caps.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true); 
+  WebDriver driver = new InternetExplorerDriver(caps); 
+
 30. How would you design a Selenium-based test automation framework from scratch?
 31. Some test cases fail intermittently. How would you approach debugging them?
 32. How do you manage test data for automated test suites?
